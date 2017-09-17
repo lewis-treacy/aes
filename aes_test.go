@@ -81,53 +81,6 @@ func Test_expandKey(t *testing.T) {
 	}
 }
 
-func Test_rotr(t *testing.T) {
-	for _, c := range []struct {
-		in uint32
-		want uint32
-	}{
-		{0x00010203, 0x01020300},
-		{0xFFFEFDFC, 0xFEFDFCFF},
-	}{
-		got := rotw(c.in)
-		if got != c.want {
-			t.Errorf("rotw(0x%08X) == 0x%08X, want 0x%08X", c.in, got, c.want)
-		}
-	}
-}
-
-func Test_subw(t *testing.T) {
-	for _, c := range []struct {
-		in uint32
-		want uint32
-	}{
-		{0x534CE388, 0xED2911C4},
-		{0x00010203, 0x637C777B},
-		{0xFFFEFDFC, 0x16BB54B0},
-	}{
-		got := subw(c.in)
-		if got != c.want {
-			t.Errorf("sub(0x%02X) == 0x%02X, want 0x%02X", c.in, got, c.want)
-		}
-	}
-}
-
-func Test_rcon(t *testing.T) {
-	for _, c := range []struct {
-		in int
-		want uint32
-	}{
-		{1, 0x01000000},
-		{9, 0x1B000000},
-		{10, 0x36000000},
-	}{
-		got := rcon(c.in)
-		if got != c.want {
-			t.Errorf("rcon(0x%02X) == 0x%08X, want 0x%08X", c.in, got, c.want)
-		}
-	}
-}
-
 func compareWords(a, b []uint32) (bool, error) {
 	if len(a) != len(b) {
 		return false, errors.New("lengths differ")
