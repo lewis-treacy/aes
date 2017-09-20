@@ -8,18 +8,24 @@ type key struct {
 }
 
 // Rotate word left 1 byte
-func rotw(w []byte) []byte {
+func rotw(w []byte) {
 	temp := w[0]
 	w[0] = w[1]
 	w[1] = w[2]
 	w[2] = w[3]
 	w[3] = temp
-	return w
 }
 
 // Returns substitute byte according to Rijndael's S-box
 func getSboxSub(b byte) byte {
 	return sbox[b]
+}
+
+// Returns state with each byte substituted according to Rijndael's S-box
+func subBytes(s []byte) {
+	for i, v := range s {
+		s[i] = getSboxSub(v)
+	}
 }
 
 // Returns round constant
@@ -52,14 +58,14 @@ func expandKey(key []byte) []byte {
 
 		if i % nk == 0 {
 			// Rotate word
-			temp = rotw(temp)
+			rotw(temp)
 			// Sub word
-			temp = subBytes(temp)
+			subBytes(temp)
 			// Rcon
 			temp[0] = temp[0] ^ getRcon(i/nk)
 		} else if nk > 6 && i % nk == 4 {
 			// Sub word
-			temp = subBytes(temp)
+			subBytes(temp)
 		}
 		xKey[(4*i) + 0] = xKey[4*(i-nk) + 0] ^ temp[0]
 		xKey[(4*i) + 1] = xKey[4*(i-nk) + 1] ^ temp[1]
@@ -70,71 +76,61 @@ func expandKey(key []byte) []byte {
 }
 
 // Adds (xor) state to round key
-func addRoundKey(s []byte, w []byte) []byte {
-	t := make([]byte, 16)
+func addRoundKey(s []byte, w []byte) {
 	for i, v := range s {
-		t[i] = v ^ w[i]
+		s[i] = v ^ w[i]
 	}
-	return t
-}
-
-// Returns state with each byte substituted according to Rijndael's S-box
-func subBytes(s []byte) []byte {
-	t := make([]byte, len(s))
-	for i, v := range s {
-		t[i] = getSboxSub(v)
-	}
-	return t
 }
 
 // Shifts rows to the right, by one more byte for each row
-func shiftRows(s []byte) []byte {
-	t := make([]byte, 16)
+func shiftRows(s []byte) {
+	t := make([]byte, 4)
 	for i := 0; i < 4; i++ {
-		t[i] = s[5*i]
-		t[4+i] = s[(4+(5*i)) % 16]
-		t[8+i] = s[(8+(5*i)) % 16]
-		t[12+i] = s[(12+(5*i)) % 16]
+		t[0] = s[5*i]
+		t[1] = s[((5*i)+4) % 16]
+		t[2] = s[((5*i)+8) % 16]
+		t[3] = s[((5*i)+12) % 16]
+
+		s[i] = t[0]
+		s[4+i] = t[1]
+		s[8+i] = t[2]
+		s[12+i] = t[3]
 	}
-	return t
 }
 
-func mixColumns(s []byte) []byte {
+func mixColumns(s []byte) {
 	t := make([]byte, 4)
-	temp := make([]byte, 16)
-
 	for i := 0; i < 4; i++ {
 		t[0] = gf_mul2[s[(4*i) + 0]] ^ s[(4*i) + 3] ^ s[(4*i) + 2] ^ gf_mul3[s[(4*i) + 1]] // 2*a0 + a3 + a2 + 3*a1
 		t[1] = gf_mul2[s[(4*i) + 1]] ^ s[(4*i) + 0] ^ s[(4*i) + 3] ^ gf_mul3[s[(4*i) + 2]] // 2*a1 + a0 + a3 + 3*a2
 		t[2] = gf_mul2[s[(4*i) + 2]] ^ s[(4*i) + 1] ^ s[(4*i) + 0] ^ gf_mul3[s[(4*i) + 3]] // 2*a2 + a1 + a0 + 3*a3
 		t[3] = gf_mul2[s[(4*i) + 3]] ^ s[(4*i) + 2] ^ s[(4*i) + 1] ^ gf_mul3[s[(4*i) + 0]] // 2*a3 + a2 + a1 + 3*a0
-		temp[(4*i) + 0] = t[0]
-		temp[(4*i) + 1] = t[1]
-		temp[(4*i) + 2] = t[2]
-		temp[(4*i) + 3] = t[3]
+
+		s[(4*i) + 0] = t[0]
+		s[(4*i) + 1] = t[1]
+		s[(4*i) + 2] = t[2]
+		s[(4*i) + 3] = t[3]
 	}
-	return temp
 }
 
-func encryptBlock(b []byte, k *key) []byte {
+func encryptBlock(s []byte, k *key) {
 	// Add round key
-	s := addRoundKey(b, k.xkey)
+	addRoundKey(s, k.xkey)
 	for i := 1; i < k.rounds; i++{
 		// Sub bytes
-		s = subBytes(s)
+		subBytes(s)
 		// Shift rows, wrong
-		s = shiftRows(s)
+		shiftRows(s)
 		// Mix columns
-		s = mixColumns(s)
+		mixColumns(s)
 		// Add round key
-		s = addRoundKey(s, k.xkey[i*16:])
+		addRoundKey(s, k.xkey[i*16:])
 	}
 
 	// Sub bytes
-	s = subBytes(s)
+	subBytes(s)
 	// Shift rows
-	s = shiftRows(s)
+	shiftRows(s)
 	// Add round key
-	s = addRoundKey(s, k.xkey[len(k.xkey)-16:])
-	return s
+	addRoundKey(s, k.xkey[len(k.xkey)-16:])
 }

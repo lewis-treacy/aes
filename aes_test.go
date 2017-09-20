@@ -35,7 +35,9 @@ func Test_rotw(t *testing.T) {
 		{[]byte{0x00, 0x01, 0x02, 0x03}, []byte{0x01, 0x02, 0x03, 0x00}},
 		{[]byte{0xFF, 0xFE, 0xFD, 0xFC}, []byte{0xFE, 0xFD, 0xFC, 0xFF}},
 	}{
-		got := rotw(c.in)
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		rotw(got)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("rotw(0x%08X)=0x%08X, want 0x%08X: %q", c.in, got, c.want, err.Error())
 		}
@@ -55,6 +57,29 @@ func Test_getSboxSub(t *testing.T) {
 		got := getSboxSub(c.in)
 		if got != c.want {
 			t.Errorf("getSboxSub(0x%02X) = 0x%02X, want 0x%02X", c.in, got, c.want)
+		}
+	}
+}
+
+func Test_subBytes(t *testing.T) {
+	for _, c := range []struct {
+		in []byte
+		want []byte
+	}{
+		{[]byte{0x00, 0x01, 0x02, 0x03}, []byte{0x63, 0x7C, 0x77, 0x7B}},
+		{[]byte{0xFF, 0xFE, 0xFD, 0xFC}, []byte{0x16, 0xBB, 0x54, 0xB0}},
+
+		{[]byte{
+			0x9B, 0xA3, 0x54, 0x11, 0x8E, 0x69, 0x25, 0xAF, 0xA5, 0x1A, 0x8B, 0x5F, 0x20, 0x67, 0xFC, 0xDE,
+		}, []byte{
+			0x14, 0x0A, 0x20, 0x82, 0x19, 0xF9, 0x3F, 0x79, 0x06, 0xA2, 0x3D, 0xCF, 0xB7, 0x85, 0xB0, 0x1D,
+		}},
+	}{
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		subBytes(got)
+		if ok, err := compareBytes(got, c.want); !ok {
+			t.Errorf("subBytes(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
@@ -180,30 +205,11 @@ func Test_addRoundKey(t *testing.T) {
 			0x33, 0x13, 0xC8, 0x0B, 0x1D, 0xB8, 0xb1, 0x62, 0x1B, 0x53, 0x0F, 0x31, 0x97, 0x3A, 0xA7, 0x44,
 		}},
 	}{
-		got := addRoundKey(c.in_s, c.in_w)
+		got := make([]byte, len(c.in_s))
+		copy(got, c.in_s)
+		addRoundKey(got, c.in_w)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("addRoundKey(0x%32X, 0x%32X)=0x%32X, want 0x%32X: %q", c.in_s, c.in_w, got, c.want, err.Error())
-		}
-	}
-}
-
-func Test_subBytes(t *testing.T) {
-	for _, c := range []struct {
-		in []byte
-		want []byte
-	}{
-		{[]byte{0x00, 0x01, 0x02, 0x03}, []byte{0x63, 0x7C, 0x77, 0x7B}},
-		{[]byte{0xFF, 0xFE, 0xFD, 0xFC}, []byte{0x16, 0xBB, 0x54, 0xB0}},
-
-		{[]byte{
-			0x9B, 0xA3, 0x54, 0x11, 0x8E, 0x69, 0x25, 0xAF, 0xA5, 0x1A, 0x8B, 0x5F, 0x20, 0x67, 0xFC, 0xDE,
-		}, []byte{
-			0x14, 0x0A, 0x20, 0x82, 0x19, 0xF9, 0x3F, 0x79, 0x06, 0xA2, 0x3D, 0xCF, 0xB7, 0x85, 0xB0, 0x1D,
-		}},
-	}{
-		got := subBytes(c.in)
-		if ok, err := compareBytes(got, c.want); !ok {
-			t.Errorf("subBytes(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
@@ -237,7 +243,9 @@ func Test_shiftRows(t *testing.T) {
 			0x6A, 0x5E, 0xCF, 0x43,
 }},
 	}{
-		got := shiftRows(c.in)
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		shiftRows(got)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("shiftRows(0x%032X)=0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
 		}
@@ -265,7 +273,9 @@ func Test_mixColumns(t *testing.T) {
 			0x4D, 0x7E, 0xBD, 0xF8, 0x04, 0x66, 0x81, 0xE5,
 		}},
 	}{
-		got := mixColumns(c.in)
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		mixColumns(got)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("mixColumn(0x%032X) = 0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
 		}
@@ -274,7 +284,7 @@ func Test_mixColumns(t *testing.T) {
 
 func Test_encryptBlock(t *testing.T) {
 	for _, c := range []struct {
-		in_b []byte
+		in_s []byte
 		in_k *key
 		want []byte
 	}{
@@ -288,9 +298,11 @@ func Test_encryptBlock(t *testing.T) {
 			0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32,
 		}},
 	}{
-		got := encryptBlock(c.in_b, c.in_k)
+		got := make([]byte, len(c.in_s))
+		copy(got, c.in_s)
+		encryptBlock(got, c.in_k)
 		if ok, err := compareBytes(got, c.want); !ok {
-			t.Errorf("encryptBlock(0x%032X, 0x%X) = 0x%032X, want 0x%032X, %q", c.in_b, c.in_k.key, got, c.want, err.Error())
+			t.Errorf("encryptBlock(0x%032X, 0x%X) = 0x%032X, want 0x%032X, %q", c.in_s, c.in_k.key, got, c.want, err.Error())
 		}
 	}
 }
