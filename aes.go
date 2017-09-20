@@ -40,7 +40,7 @@ func expandKey(key []byte) []byte {
 	nk := len(key) / 4
 	xKey := make([]byte, 16*(rounds[len(key)]+1))
 
-	// Begining of the expanded key is the same
+	// Beginning of the expanded key is the same
 	i := 0
 	for ; i < nk; i++ {
 		xKey[(4*i)+0] = key[(4*i)+0]
@@ -98,6 +98,7 @@ func shiftRows(s []byte) {
 	}
 }
 
+// Mix columns as coefficients of a polynomial over Rijndael's Galois field
 func mixColumns(s []byte) {
 	t := make([]byte, 4)
 	for i := 0; i < 4; i++ {
@@ -113,6 +114,7 @@ func mixColumns(s []byte) {
 	}
 }
 
+// Encrypts one 16 byte block in place in memory
 func encryptBlock(s []byte, k *key) {
 	// Add round key
 	addRoundKey(s, k.xkey)
