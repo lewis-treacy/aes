@@ -34,7 +34,7 @@ func subBytes(s []byte) {
 }
 
 // Substitutes each byte according to Rijndael's inverse S-box
-func invSubBytes(s []byte) {
+func subBytesInv(s []byte) {
 	for i, v := range s {
 		s[i] = getInvSboxSub(v)
 	}
@@ -104,9 +104,25 @@ func shiftRows(s []byte) {
 		t[3] = s[((5*i)+12)%16]
 
 		s[i] = t[0]
-		s[4+i] = t[1]
-		s[8+i] = t[2]
-		s[12+i] = t[3]
+		s[i+4] = t[1]
+		s[i+8] = t[2]
+		s[i+12] = t[3]
+	}
+}
+
+// Shifts rows to the left, by one more byte for each row
+func shiftRowsInv(s []byte) {
+	t := make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		t[0] = s[(16-(3*i))%16]
+		t[1] = s[(20-(3*i))%16]
+		t[2] = s[(24-(3*i))%16]
+		t[3] = s[12-(3*i)]
+
+		s[i] = t[0]
+		s[i+4] = t[1]
+		s[i+8] = t[2]
+		s[i+12] = t[3]
 	}
 }
 

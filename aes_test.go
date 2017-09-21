@@ -101,7 +101,7 @@ func Test_subBytes(t *testing.T) {
 	}
 }
 
-func Test_invSubBytes(t *testing.T) {
+func Test_subBytesInv(t *testing.T) {
 	for _, c := range []struct {
 		in   []byte
 		want []byte
@@ -117,9 +117,9 @@ func Test_invSubBytes(t *testing.T) {
 	} {
 		got := make([]byte, len(c.in))
 		copy(got, c.in)
-		invSubBytes(got)
+		subBytesInv(got)
 		if ok, err := compareBytes(got, c.want); !ok {
-			t.Errorf("invSubBytes(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
+			t.Errorf("subBytesInv(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
@@ -285,6 +285,44 @@ func Test_shiftRows(t *testing.T) {
 		shiftRows(got)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("shiftRows(0x%032X)=0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
+		}
+	}
+}
+
+func Test_shiftRowsInv(t *testing.T) {
+	for _, c := range []struct {
+		in   []byte
+		want []byte
+	}{
+		{[]byte{
+			0x00, 0x05, 0x0A, 0x0F,
+			0x04, 0x09, 0x0E, 0x03,
+			0x08, 0x0D, 0x02, 0x07,
+			0x0C, 0x01, 0x06, 0x0B,
+		}, []byte{
+			0x00, 0x01, 0x02, 0x03,
+			0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B,
+			0x0C, 0x0D, 0x0E, 0x0F,
+		}},
+
+		{[]byte{
+			0xA2, 0xB1, 0x39, 0x67,
+			0x83, 0xF9, 0xF7, 0xD5,
+			0x27, 0x94, 0x7E, 0x9A,
+			0x6A, 0x5E, 0xCF, 0x43,
+		}, []byte{
+			0xA2, 0x5E, 0x7E, 0xD5,
+			0x83, 0xB1, 0xCF, 0x9A,
+			0x27, 0xF9, 0x39, 0x43,
+			0x6A, 0x94, 0xF7, 0x67,
+		}},
+	} {
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		shiftRowsInv(got)
+		if ok, err := compareBytes(got, c.want); !ok {
+			t.Errorf("shiftRowsInv(0x%032X)=0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
