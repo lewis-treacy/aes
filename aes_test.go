@@ -410,6 +410,29 @@ func Test_encryptBlock(t *testing.T) {
 	}
 }
 
+func Test_decryptBlock(t *testing.T) {
+	for _, c := range []struct {
+		in_s []byte
+		in_k *key
+		want []byte
+	}{
+		{[]byte{
+			0x39, 0x25, 0x84, 0x1D, 0x02, 0xdc, 0x09, 0xFB,
+			0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32,
+		}, &key1, []byte{
+			0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d,
+			0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34,
+		}},
+	} {
+		got := make([]byte, len(c.in_s))
+		copy(got, c.in_s)
+		decryptBlock(got, c.in_k)
+		if ok, err := compareBytes(got, c.want); !ok {
+			t.Errorf("decryptBlock(0x%032X, 0x%X) = 0x%032X, want 0x%032X, %q", c.in_s, c.in_k.key, got, c.want, err.Error())
+		}
+	}
+}
+
 /* UTILS */
 func compareBytes(a, b []byte) (bool, error) {
 	if len(a) != len(b) {

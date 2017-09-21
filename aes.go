@@ -176,6 +176,7 @@ func mixColumnsInv(s []byte) {
 		s[(4*i)+3] = gfMul(0x0E, a[3]) ^ gfMul(0x0B, a[0]) ^ gfMul(0x0D, a[1]) ^ gfMul(0x09, a[2]) /* 14*a3 + 11*a0 + 13*a1 + 9*a2 */
 	}
 }
+
 // Encrypts one 16 byte block in place in memory
 func encryptBlock(s []byte, k *key) {
 	// Add round key
@@ -197,4 +198,27 @@ func encryptBlock(s []byte, k *key) {
 	shiftRows(s)
 	// Add round key
 	addRoundKey(s, k.xkey[len(k.xkey)-16:])
+}
+
+// Decrypts one 16 byte block in place in memory
+func decryptBlock(s []byte, k *key) {
+	// Add round key
+	addRoundKey(s, k.xkey[len(k.xkey)-16:])
+	for i := 1; i < k.rounds; i++ {
+		// Shift rows, wrong
+		shiftRowsInv(s)
+		// Sub bytes
+		subBytesInv(s)
+		// Add round key
+		addRoundKey(s, k.xkey[len(k.xkey)-((i+1)*16):])
+		// Mix columns
+		mixColumnsInv(s)
+	}
+
+	// Shift rows
+	shiftRowsInv(s)
+	// Sub bytes
+	subBytesInv(s)
+	// Add round key
+	addRoundKey(s, k.xkey)
 }
