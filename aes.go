@@ -98,19 +98,37 @@ func shiftRows(s []byte) {
 	}
 }
 
+// Galois Field (2^8) Multiplication of two Bytes
+func gfMul(a, b byte) byte {
+	var prod byte = 0
+	var h byte
+	for i := 0; i < 8; i++ {
+		if (b & 0x01) != 0 {
+			prod ^= a
+		}
+		h = a >> 7
+		a <<= 1
+		if h != 0 {
+			a ^= 0x1B
+		}
+		b >>= 1
+	}
+	return prod
+}
+
 // Mix columns as coefficients of a polynomial over Rijndael's Galois field
 func mixColumns(s []byte) {
-	t := make([]byte, 4)
+	a := make([]byte, 4)
 	for i := 0; i < 4; i++ {
-		t[0] = gf_mul2[s[(4*i)+0]] ^ s[(4*i)+3] ^ s[(4*i)+2] ^ gf_mul3[s[(4*i)+1]] // 2*a0 + a3 + a2 + 3*a1
-		t[1] = gf_mul2[s[(4*i)+1]] ^ s[(4*i)+0] ^ s[(4*i)+3] ^ gf_mul3[s[(4*i)+2]] // 2*a1 + a0 + a3 + 3*a2
-		t[2] = gf_mul2[s[(4*i)+2]] ^ s[(4*i)+1] ^ s[(4*i)+0] ^ gf_mul3[s[(4*i)+3]] // 2*a2 + a1 + a0 + 3*a3
-		t[3] = gf_mul2[s[(4*i)+3]] ^ s[(4*i)+2] ^ s[(4*i)+1] ^ gf_mul3[s[(4*i)+0]] // 2*a3 + a2 + a1 + 3*a0
+		a[0] = s[(4*i)+0]
+		a[1] = s[(4*i)+1]
+		a[2] = s[(4*i)+2]
+		a[3] = s[(4*i)+3]
 
-		s[(4*i)+0] = t[0]
-		s[(4*i)+1] = t[1]
-		s[(4*i)+2] = t[2]
-		s[(4*i)+3] = t[3]
+		s[(4*i)+0] = gfMul(0x02, a[0]) ^ a[3] ^ a[2] ^ gfMul(0x03, a[1]) /* 2*a0 + a3 + a2 + 3*a1 */
+		s[(4*i)+1] = gfMul(0x02, a[1]) ^ a[0] ^ a[3] ^ gfMul(0x03, a[2]) /* 2*a1 + a0 + a3 + 3*a2 */
+		s[(4*i)+2] = gfMul(0x02, a[2]) ^ a[1] ^ a[0] ^ gfMul(0x03, a[3]) /* 2*a2 + a1 + a0 + 3*a3 */
+		s[(4*i)+3] = gfMul(0x02, a[3]) ^ a[2] ^ a[1] ^ gfMul(0x03, a[0]) /* 2*a3 + a2 + a1 + 3*a0 */
 	}
 }
 

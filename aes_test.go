@@ -274,7 +274,7 @@ func Test_mixColumns(t *testing.T) {
 		copy(got, c.in)
 		mixColumns(got)
 		if ok, err := compareBytes(got, c.want); !ok {
-			t.Errorf("mixColumn(0x%032X) = 0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
+			t.Errorf("mixColumns(0x%032X) = 0x%032X, want 0x%032X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
