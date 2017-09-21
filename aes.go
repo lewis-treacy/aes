@@ -153,13 +153,29 @@ func mixColumns(s []byte) {
 		a[2] = s[(4*i)+2]
 		a[3] = s[(4*i)+3]
 
-		s[(4*i)+0] = gfMul(0x02, a[0]) ^ a[3] ^ a[2] ^ gfMul(0x03, a[1]) /* 2*a0 + a3 + a2 + 3*a1 */
-		s[(4*i)+1] = gfMul(0x02, a[1]) ^ a[0] ^ a[3] ^ gfMul(0x03, a[2]) /* 2*a1 + a0 + a3 + 3*a2 */
-		s[(4*i)+2] = gfMul(0x02, a[2]) ^ a[1] ^ a[0] ^ gfMul(0x03, a[3]) /* 2*a2 + a1 + a0 + 3*a3 */
-		s[(4*i)+3] = gfMul(0x02, a[3]) ^ a[2] ^ a[1] ^ gfMul(0x03, a[0]) /* 2*a3 + a2 + a1 + 3*a0 */
+		s[(4*i)+0] = gfMul(0x02, a[0]) ^ gfMul(0x03, a[1]) ^ a[2] ^ a[3] /* 2*a0 + 3*a1 + a2 + a3 */
+		s[(4*i)+1] = gfMul(0x02, a[1]) ^ gfMul(0x03, a[2]) ^ a[3] ^ a[0] /* 2*a1 + 3*a2 + a3 + a0 */
+		s[(4*i)+2] = gfMul(0x02, a[2]) ^ gfMul(0x03, a[3]) ^ a[0] ^ a[1] /* 2*a2 + 3*a3 + a0 + a1 */
+		s[(4*i)+3] = gfMul(0x02, a[3]) ^ gfMul(0x03, a[0]) ^ a[1] ^ a[2] /* 2*a3 + 3*a0 + a1 + a2 */
 	}
 }
 
+
+// Inverse of mix columns
+func mixColumnsInv(s []byte) {
+	a := make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		a[0] = s[(4*i)+0]
+		a[1] = s[(4*i)+1]
+		a[2] = s[(4*i)+2]
+		a[3] = s[(4*i)+3]
+
+		s[(4*i)+0] = gfMul(0x0E, a[0]) ^ gfMul(0x0B, a[1]) ^ gfMul(0x0D, a[2]) ^ gfMul(0x09, a[3]) /* 14*a0 + 11*a1 + 13*a2 + 9*a3 */
+		s[(4*i)+1] = gfMul(0x0E, a[1]) ^ gfMul(0x0B, a[2]) ^ gfMul(0x0D, a[3]) ^ gfMul(0x09, a[0]) /* 14*a1 + 11*a2 + 13*a3 + 9*a0 */
+		s[(4*i)+2] = gfMul(0x0E, a[2]) ^ gfMul(0x0B, a[3]) ^ gfMul(0x0D, a[0]) ^ gfMul(0x09, a[1]) /* 14*a2 + 11*a3 + 13*a0 + 9*a1 */
+		s[(4*i)+3] = gfMul(0x0E, a[3]) ^ gfMul(0x0B, a[0]) ^ gfMul(0x0D, a[1]) ^ gfMul(0x09, a[2]) /* 14*a3 + 11*a0 + 13*a1 + 9*a2 */
+	}
+}
 // Encrypts one 16 byte block in place in memory
 func encryptBlock(s []byte, k *key) {
 	// Add round key
