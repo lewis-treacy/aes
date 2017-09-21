@@ -21,10 +21,22 @@ func getSboxSub(b byte) byte {
 	return sbox[b]
 }
 
-// Returns state with each byte substituted according to Rijndael's S-box
+// Returns substitute byte according to Rijndael's inverse S-box
+func getInvSboxSub(b byte) byte {
+	return rsbox[b]
+}
+
+// Substitutes each byte according to Rijndael's S-box
 func subBytes(s []byte) {
 	for i, v := range s {
 		s[i] = getSboxSub(v)
+	}
+}
+
+// Substitutes each byte according to Rijndael's inverse S-box
+func invSubBytes(s []byte) {
+	for i, v := range s {
+		s[i] = getInvSboxSub(v)
 	}
 }
 

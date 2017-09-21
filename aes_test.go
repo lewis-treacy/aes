@@ -61,6 +61,23 @@ func Test_getSboxSub(t *testing.T) {
 	}
 }
 
+func Test_getInvSboxSub(t *testing.T) {
+	for _, c := range []struct {
+		in   byte
+		want byte
+	}{
+		{0x63, 0x00},
+		{0x16, 0xFF},
+		{0xF9, 0x69},
+		{0x99, 0xF9},
+	} {
+		got := getInvSboxSub(c.in)
+		if got != c.want {
+			t.Errorf("getInvSboxSub(0x%02X) = 0x%02X, want 0x%02X", c.in, got, c.want)
+		}
+	}
+}
+
 func Test_subBytes(t *testing.T) {
 	for _, c := range []struct {
 		in   []byte
@@ -80,6 +97,29 @@ func Test_subBytes(t *testing.T) {
 		subBytes(got)
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("subBytes(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
+		}
+	}
+}
+
+func Test_invSubBytes(t *testing.T) {
+	for _, c := range []struct {
+		in   []byte
+		want []byte
+	}{
+		{[]byte{0x63, 0x7C, 0x77, 0x7B}, []byte{0x00, 0x01, 0x02, 0x03}},
+		{[]byte{0x16, 0xBB, 0x54, 0xB0}, []byte{0xFF, 0xFE, 0xFD, 0xFC}},
+
+		{[]byte{
+			0x14, 0x0A, 0x20, 0x82, 0x19, 0xF9, 0x3F, 0x79, 0x06, 0xA2, 0x3D, 0xCF, 0xB7, 0x85, 0xB0, 0x1D,
+		}, []byte{
+			0x9B, 0xA3, 0x54, 0x11, 0x8E, 0x69, 0x25, 0xAF, 0xA5, 0x1A, 0x8B, 0x5F, 0x20, 0x67, 0xFC, 0xDE,
+		}},
+	} {
+		got := make([]byte, len(c.in))
+		copy(got, c.in)
+		invSubBytes(got)
+		if ok, err := compareBytes(got, c.want); !ok {
+			t.Errorf("invSubBytes(0x%X)=0x%X, want 0x%X: %q", c.in, got, c.want, err.Error())
 		}
 	}
 }
@@ -309,7 +349,7 @@ func compareBytes(a, b []byte) (bool, error) {
 	}
 	for i, v := range a {
 		if v != b[i] {
-			return false, errors.New(fmt.Sprintf("a[%d] = 0x%02X, b[%d] = 0x%02X", i, v, i, b[i]))
+			return false, errors.New(fmt.Sprintf("index %d, 0x%02X != 0x%02X", i, v, b[i]))
 		}
 	}
 	return true, nil
