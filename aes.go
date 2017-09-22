@@ -246,3 +246,37 @@ func Encrypt(src []byte, key []byte) ([]byte, error) {
 	}
 	return b, nil
 }
+
+// Removes 0x00s at the end of b
+func removePadding(b []byte) []byte {
+	idx := 0
+	for i := len(b) - 1; i >= 0; i-- {
+		if b[i] != 0x00 {
+			idx = i + 1
+			break
+		}
+	}
+	return b[:idx]
+}
+
+// Returns src decrypted using aes with key key
+func Decrypt(src []byte, key []byte) ([]byte, error) {
+	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
+		return nil, errors.New("incorrect key length, must be 16, 24 or 32 bytes")
+	}
+
+	if len(src)%16 != 0 {
+		return nil, errors.New("source is an incorrect length, must be a multiple of 16 bytes")
+	}
+
+	b := make([]byte, len(src))
+	copy(b, src)
+
+	// Expand key
+	k := &key_t{key, expandKey(key), rounds[len(key)]}
+
+	for i := 0; i < len(b)/16; i++ {
+		decryptBlock(b[16*i:16*(i+1)], k)
+	}
+	return removePadding(b), nil
+}
