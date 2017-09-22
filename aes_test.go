@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var testCypher1 Cypher = Cypher{
+var testCypher1 cypher = cypher{
 	[]byte{
 		0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
 		0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C,
@@ -26,7 +26,7 @@ var testCypher1 Cypher = Cypher{
 	}, 10,
 }
 
-var testCypher2 Cypher = Cypher{
+var testCypher2 cypher = cypher{
 	[]byte{
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 		0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
@@ -46,7 +46,7 @@ var testCypher2 Cypher = Cypher{
 	}, 10,
 }
 
-var testCypher3 Cypher = Cypher{
+var testCypher3 cypher = cypher{
 	[]byte{
 		0x00, 0xFF, 0x01, 0xFE, 0x02, 0xFD, 0x03, 0xFC,
 		0x04, 0xFB, 0x05, 0xFA, 0x06, 0xF9, 0x07, 0xF8,
@@ -434,7 +434,7 @@ func TestMixColumnsInv(t *testing.T) {
 
 func TestEncryptBlock(t *testing.T) {
 	for _, c := range []struct {
-		cypher *Cypher
+		cypher *cypher
 		in     []byte
 		want   []byte
 	}{
@@ -457,7 +457,7 @@ func TestEncryptBlock(t *testing.T) {
 
 func TestDecryptBlock(t *testing.T) {
 	for _, c := range []struct {
-		cypher *Cypher
+		cypher *cypher
 		in     []byte
 		want   []byte
 	}{
@@ -481,7 +481,7 @@ func TestDecryptBlock(t *testing.T) {
 func TestNewCypher(t *testing.T) {
 	for _, c := range []struct {
 		in       []byte
-		want     *Cypher
+		want     *cypher
 		want_err bool
 	}{
 		{[]byte{
@@ -527,10 +527,9 @@ func TestNewCypher(t *testing.T) {
 
 func TestEncrypt(t *testing.T) {
 	for _, c := range []struct {
-		cypher   *Cypher
+		cypher   *cypher
 		in       []byte
 		want     []byte
-		want_err bool
 	}{
 		{&testCypher1, []byte{
 			0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
@@ -538,12 +537,12 @@ func TestEncrypt(t *testing.T) {
 		}, []byte{
 			0x39, 0x25, 0x84, 0x1D, 0x02, 0xdc, 0x09, 0xFB,
 			0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32,
-		}, false},
+		}},
 
 		{&testCypher2, []byte("Hello World!"), []byte{
 			0xD4, 0x82, 0xD4, 0x20, 0xAA, 0x67, 0xEA, 0x43,
 			0x5D, 0xAF, 0xB6, 0xF4, 0x6E, 0x54, 0xAA, 0x2A,
-		}, false},
+		}},
 
 		{&testCypher3, []byte("This is a super secret message and thus requires a 256 bit key"), []byte{
 			0x18, 0xD5, 0xD3, 0x88, 0x19, 0x18, 0x31, 0xF2,
@@ -554,20 +553,9 @@ func TestEncrypt(t *testing.T) {
 			0xE7, 0xD8, 0x29, 0x1E, 0x2C, 0x15, 0x20, 0x97,
 			0x2B, 0xF7, 0xC0, 0xB4, 0xF7, 0xF1, 0xE8, 0xE1,
 			0xBB, 0x00, 0x21, 0x7C, 0xC2, 0x01, 0x64, 0x87,
-		}, false},
+		}},
 	} {
-		got, got_err := c.cypher.Encrypt(c.in)
-		if got_err != nil {
-			if !c.want_err {
-				t.Errorf("Encrypt(0x%X, 0x%X) threw unexpected error: %q", c.in, c.cypher.key, got_err)
-			}
-			return
-		}
-
-		if got_err == nil && c.want_err {
-			t.Errorf("Encrypt(0x%X, 0x%X) didn't thow error when expected", c.in, c.cypher.key, got_err)
-			return
-		}
+		got := c.cypher.Encrypt(c.in)
 
 		if ok, err := compareBytes(got, c.want); !ok {
 			t.Errorf("Encrypt(0x%X, 0x%X) = 0x%X, want 0x%X, %q", c.in, c.cypher.key, got, c.want, err.Error())
@@ -601,7 +589,7 @@ func TestRemovePadding(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	for _, c := range []struct {
-		cypher   *Cypher
+		cypher   *cypher
 		in       []byte
 		want     []byte
 		want_err bool
@@ -662,7 +650,7 @@ func compareBytes(a, b []byte) (bool, error) {
 	return true, nil
 }
 
-func compareCyphers(a, b *Cypher) (bool, error) {
+func compareCyphers(a, b *cypher) (bool, error) {
 	if ok, err := compareBytes(a.key, b.key); !ok {
 		return false, errors.New(fmt.Sprintf("keys don't match: %s", err.Error()))
 	}

@@ -3,7 +3,7 @@ package aes
 
 import "errors"
 
-type Cypher struct {
+type cypher struct {
 	key    []byte
 	xkey   []byte
 	rounds int
@@ -179,7 +179,7 @@ func mixColumnsInv(s []byte) {
 }
 
 // Encrypts one 16 byte block in place in memory
-func (c *Cypher) encryptBlock(s []byte) {
+func (c *cypher) encryptBlock(s []byte) {
 	addRoundKey(s, c.xkey)
 	for i := 1; i < c.rounds; i++ {
 		subBytes(s)
@@ -194,7 +194,7 @@ func (c *Cypher) encryptBlock(s []byte) {
 }
 
 // Decrypts one 16 byte block in place in memory
-func (c *Cypher) decryptBlock(s []byte) {
+func (c *cypher) decryptBlock(s []byte) {
 	addRoundKey(s, c.xkey[len(c.xkey)-16:])
 	for i := 1; i < c.rounds; i++ {
 		shiftRowsInv(s)
@@ -209,17 +209,17 @@ func (c *Cypher) decryptBlock(s []byte) {
 }
 
 // Returns pointer to new cypher
-func NewCypher(key []byte) (*Cypher, error) {
+func NewCypher(key []byte) (*cypher, error) {
 	// Check key length
 	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
 		return nil, errors.New("incorrect key length, must be 16, 24 or 32 bytes")
 	}
 
-	return &Cypher{key, expandKey(key), rounds[len(key)]}, nil
+	return &cypher{key, expandKey(key), rounds[len(key)]}, nil
 }
 
 // Returns src encrypted using aes with key key
-func (c *Cypher) Encrypt(src []byte) ([]byte, error) {
+func (c *cypher) Encrypt(src []byte) []byte {
 	// Calculate length of src with padding
 	length := len(src)
 	if length%16 != 0 {
@@ -231,7 +231,7 @@ func (c *Cypher) Encrypt(src []byte) ([]byte, error) {
 	for i := 0; i < length/16; i++ {
 		c.encryptBlock(b[16*i : 16*(i+1)])
 	}
-	return b, nil
+	return b
 }
 
 // Removes 0x00s at the end of b
@@ -247,7 +247,8 @@ func removePadding(b []byte) []byte {
 }
 
 // Returns src decrypted using aes with key key
-func (c *Cypher) Decrypt(src []byte) ([]byte, error) {
+// Will throw an error is len(src) isn't a multiple of 16
+func (c *cypher) Decrypt(src []byte) ([]byte, error) {
 	if len(src)%16 != 0 {
 		return nil, errors.New("source is an incorrect length, must be a multiple of 16 bytes")
 	}
