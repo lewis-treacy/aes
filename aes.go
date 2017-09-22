@@ -162,7 +162,6 @@ func mixColumns(s []byte) {
 	}
 }
 
-
 // Inverse of mix columns
 func mixColumnsInv(s []byte) {
 	a := make([]byte, 4)
@@ -233,8 +232,8 @@ func Encrypt(src []byte, key []byte) ([]byte, error) {
 
 	// Calculate length of src with padding
 	length := len(src)
-	if length % 16 != 0 {
-		length = 16*(len(src)/16+1)
+	if length%16 != 0 {
+		length = 16 * (len(src)/16 + 1)
 	}
 	b := make([]byte, length)
 	copy(b, src)

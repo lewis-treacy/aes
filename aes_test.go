@@ -483,12 +483,12 @@ func Test_Encrypt(t *testing.T) {
 		}, false},
 	} {
 		got_out, got_err := Encrypt(c.in_src, c.in_key)
-		if (got_err != nil && !c.want_err) {
+		if got_err != nil && !c.want_err {
 			t.Errorf("Encrypt(0x%032X, 0x%032X) threw unexpected error: %q", c.in_src, c.in_key, got_err)
 			return
 		}
 
-		if (got_err == nil && c.want_err) {
+		if got_err == nil && c.want_err {
 			t.Errorf("Encrypt(0x%032X, 0x%032X) didn't thow error when expected", c.in_src, c.in_key, got_err)
 			return
 		}
