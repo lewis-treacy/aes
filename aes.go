@@ -1,7 +1,9 @@
 // Advanced Encryption Standard implementation.
 package aes
 
-type key struct {
+import "errors"
+
+type key_t struct {
 	key    []byte
 	xkey   []byte
 	rounds int
@@ -178,7 +180,7 @@ func mixColumnsInv(s []byte) {
 }
 
 // Encrypts one 16 byte block in place in memory
-func encryptBlock(s []byte, k *key) {
+func encryptBlock(s []byte, k *key_t) {
 	// Add round key
 	addRoundKey(s, k.xkey)
 	for i := 1; i < k.rounds; i++ {
@@ -201,7 +203,7 @@ func encryptBlock(s []byte, k *key) {
 }
 
 // Decrypts one 16 byte block in place in memory
-func decryptBlock(s []byte, k *key) {
+func decryptBlock(s []byte, k *key_t) {
 	// Add round key
 	addRoundKey(s, k.xkey[len(k.xkey)-16:])
 	for i := 1; i < k.rounds; i++ {
@@ -221,4 +223,27 @@ func decryptBlock(s []byte, k *key) {
 	subBytesInv(s)
 	// Add round key
 	addRoundKey(s, k.xkey)
+}
+
+// Returns src encrypted using aes with key key
+func Encrypt(src []byte, key []byte) ([]byte, error) {
+	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
+		return nil, errors.New("incorrect key length, must be 16, 24 or 32 bytes")
+	}
+
+	// Calculate length of src with padding
+	length := len(src)
+	if length % 16 != 0 {
+		length = 16*(len(src)/16+1)
+	}
+	b := make([]byte, length)
+	copy(b, src)
+
+	// Expand key
+	k := &key_t{key, expandKey(key), rounds[len(key)]}
+
+	for i := 0; i < length/16; i++ {
+		encryptBlock(b[16*i:16*(i+1)], k)
+	}
+	return b, nil
 }
