@@ -180,47 +180,31 @@ func mixColumnsInv(s []byte) {
 
 // Encrypts one 16 byte block in place in memory
 func (c *Cypher) encryptBlock(s []byte) {
-	// Add round key
 	addRoundKey(s, c.xkey)
 	for i := 1; i < c.rounds; i++ {
-		// Sub bytes
 		subBytes(s)
-		// Shift rows, wrong
 		shiftRows(s)
-		// Mix columns
 		mixColumns(s)
-		// Add round key
 		addRoundKey(s, c.xkey[i*16:])
 	}
 
-	// Sub bytes
 	subBytes(s)
-	// Shift rows
 	shiftRows(s)
-	// Add round key
 	addRoundKey(s, c.xkey[len(c.xkey)-16:])
 }
 
 // Decrypts one 16 byte block in place in memory
 func (c *Cypher) decryptBlock(s []byte) {
-	// Add round key
 	addRoundKey(s, c.xkey[len(c.xkey)-16:])
 	for i := 1; i < c.rounds; i++ {
-		// Shift rows, wrong
 		shiftRowsInv(s)
-		// Sub bytes
 		subBytesInv(s)
-		// Add round key
 		addRoundKey(s, c.xkey[len(c.xkey)-((i+1)*16):])
-		// Mix columns
 		mixColumnsInv(s)
 	}
 
-	// Shift rows
 	shiftRowsInv(s)
-	// Sub bytes
 	subBytesInv(s)
-	// Add round key
 	addRoundKey(s, c.xkey)
 }
 
